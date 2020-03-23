@@ -7,8 +7,8 @@ phases:
   build:
     commands:
       - cd backend
-      - zip -r stg-imfreev2-cms.zip .
+      - zip -r <PROJECT>.zip .
   post_build:
     commands:
-      - aws s3 cp stg-imfreev2-cms.zip s3://stg-imfreev2-cms-codebuild2/
+      - aws s3 cp <PROJECT>.zip s3://<S3_BUCKET>-codebuild2/
       - echo "commit:" + $CODEBUILD_RESOLVED_SOURCE_VERSION
