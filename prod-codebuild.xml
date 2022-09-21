@@ -5,27 +5,26 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws --version
-      - $(aws ecr get-login --no-include-email --region ap-southeast-1)
-      - REPOSITORY_URI=<REPO_URI>
+      - aws ecr get-login-password --region cn-north-1 | docker login --username AWS --password-stdin <REPO>
+      - REPOSITORY_URI="<REPO_URI>"
       - echo $REPOSITORY_URI
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION)
+      - COMMIT_HASH=`git rev-parse --short=7 HEAD`
       - echo $COMMIT_HASH
-      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
-      - echo $IMAGE_TAG
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $REPOSITORY_URI:latest -f compose/nodejs/Dockerfile .
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      - docker build -t virtusize/api:latest .
+      - docker tag virtusize/api:latest $REPOSITORY_URI:$COMMIT_HASH
+      - docker tag virtusize/api:latest $REPOSITORY_URI:latest
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker images...
       - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:$COMMIT_HASH
       - echo Writing image definitions file...
-      - printf '[{"name":"<CONTAINER_NAME>","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"virtusize/api","imageUri":"%s"}]' $REPOSITORY_URI:$COMMIT_HASH > imagedefinitions.json
       - cat imagedefinitions.json 
       
 artifacts:
